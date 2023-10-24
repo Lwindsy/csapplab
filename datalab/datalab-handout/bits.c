@@ -218,9 +218,9 @@ int isAsciiDigit(int x) {
  *   Max ops: 16
  *   Rating: 3
  */
-//done
+// done
 int conditional(int x, int y, int z) {
-    int a = ~(!x) + 1; // x != 0 -> a = 00000000 ; x == 0 -> a = ffffffff
+    int a = ~(!x) + 1;  // x != 0 -> a = 00000000 ; x == 0 -> a = ffffffff
     return ((~a) & y) + (a & z);
     // return ~a;
 }
@@ -232,7 +232,14 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-    return 2;
+    // if calculate x-y, when in x <= y case the result would be negative or positive which is difficult to handle, so calculate y-x instead.
+    int minusX = ~x + 1;
+    int negative = 1 << 31;
+    int xP = !(x & negative);
+    int yP = !(y & negative);
+    int xPyN = xP & !yP;
+    int xNyP = !xP & yP;
+    return (!((y + minusX) >> 31) & !xPyN ) | xNyP | !(x ^ y);
 }
 // 4
 /*
