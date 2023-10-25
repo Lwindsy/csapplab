@@ -231,7 +231,7 @@ int conditional(int x, int y, int z) {
  *   Max ops: 24
  *   Rating: 3
  */
-//done
+// done
 int isLessOrEqual(int x, int y) {
     // if calculate x-y, when in x <= y case the result would be negative or positive which is difficult to handle, so calculate y-x instead.
     int minusX = ~x + 1;
@@ -240,7 +240,7 @@ int isLessOrEqual(int x, int y) {
     int yP = !(y & negative);
     int xPyN = xP & !yP;
     int xNyP = !xP & yP;
-    return (!((y + minusX) >> 31) & !xPyN ) | xNyP | !(x ^ y);
+    return (!((y + minusX) >> 31) & !xPyN) | xNyP | !(x ^ y);
 }
 // 4
 /*
@@ -251,8 +251,15 @@ int isLessOrEqual(int x, int y) {
  *   Max ops: 12
  *   Rating: 4
  */
+// done
 int logicalNeg(int x) {
-    return 2;
+    /*
+        Notice that only 10..00 and 0..0 have the property of having complement same as itself,
+        which means any other number and its complement must include one and only one negative number(the very first bit is 1).
+        and the difference between 10.00 and 0..0 also lies on the first number.
+    */
+    int complement = ~x + 1;
+    return ~(((complement >> 31) & 1) | ((x >> 31) & 1)) + 2;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -266,8 +273,28 @@ int logicalNeg(int x) {
  *  Max ops: 90
  *  Rating: 4
  */
+//done
 int howManyBits(int x) {
-    return 0;
+    /*
+        The position of the first '1' determines final output.
+        So use dichotomy to find it.
+    */
+    int X = x ^ (x >> 31);
+    int AllF = ~0;
+    int flag = 16;
+    int left = (X >> flag) & (0xff + (0xff << 8));
+    // All following ((!left) + AllF) == 0 when the current left side of the current flag doesn't contain '1'
+    flag = flag + (8 & ((!left) + AllF)) + ((~8 + 1) & (~((!left) + AllF)));
+    left = (X >> flag) & 0xff;
+    flag = flag + (4 & ((!left) + AllF)) + ((~4 + 1) & (~((!left) + AllF)));
+    left = (X >> flag) & 0xf;
+    flag = flag + (2 & ((!left) + AllF)) + ((~2 + 1) & (~((!left) + AllF)));
+    left = (X >> flag) & 0x3;
+    flag = flag + (1 & ((!left) + AllF)) + ((~1 + 1) & (~((!left) + AllF)));
+    left = (X >> flag) & 0x1;
+    // In final round you only need to judge the flag itself and flag-1
+    flag = flag + ((~1 + 1) & (~((!left) + AllF)));
+    return flag + 2 + (~(!(x)) + 1) + (~(!(~x)) + 1);
 }
 // float
 /*
