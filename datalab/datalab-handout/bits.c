@@ -273,7 +273,7 @@ int logicalNeg(int x) {
  *  Max ops: 90
  *  Rating: 4
  */
-//done
+// done
 int howManyBits(int x) {
     /*
         The position of the first '1' determines final output.
@@ -294,6 +294,8 @@ int howManyBits(int x) {
     left = (X >> flag) & 0x1;
     // In final round you only need to judge the flag itself and flag-1
     flag = flag + ((~1 + 1) & (~((!left) + AllF)));
+    // Considering 2 facts that the index is 1 less than output and Sign bit counts, flag should plus 2.
+    // last 2 terms are added specifically to treat 0 and -1 cases, whose output are 1.
     return flag + 2 + (~(!(x)) + 1) + (~(!(~x)) + 1);
 }
 // float
@@ -309,7 +311,26 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
-    return 2;
+    unsigned signPos = uf & 0x80000000;
+    unsigned expPos = uf & 0x7f800000;
+    unsigned frac = uf & 0x007fffff;
+    unsigned exp = expPos >> 23;
+    if (exp == 255 || (exp == 0 && frac == 0)) {
+        return uf;
+    }
+    if (exp == 0) {
+        /*
+            Genius engineers set up the pattern of float number to simplify the process of
+            turning denormalized float number to be normalized.
+            Thus simply make Frac shifts left for 1 bit is fine to calculate 2*f.
+        */
+        frac = (frac << 1);
+        return signPos | expPos | frac;
+    }
+    // exp != 0
+    exp += 1;
+    expPos = exp << 23;
+    return signPos | expPos | frac;
 }
 /*
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -324,7 +345,30 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-    return 2;
+    unsigned signPos = uf & 0x80000000;
+    unsigned expPos = uf & 0x7f800000;
+    unsigned exp = expPos >> 23;
+    int i = exp - 127;
+    // get the integer part
+    unsigned frac = (uf & 0x007fffff) >> (23 - i - 1);
+    // in case the frac should plus 1 because of rounding rule
+    int judge = frac & 1;
+    // the implied leading 1
+    int one = 1 << i;
+    
+    if(exp >= 158){
+        return 0x80000000;
+    }
+    if (exp <= 126) {
+        return 0;
+    }
+    // 127 - 157 (actual_exp == 0-30)
+    frac = (frac >> 1) | one;
+    if(judge) frac += 1;
+    if(signPos == 0){
+        return frac;
+    }
+    return ~frac + 1;
 }
 /*
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
