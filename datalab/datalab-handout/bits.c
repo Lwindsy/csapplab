@@ -355,8 +355,8 @@ int floatFloat2Int(unsigned uf) {
     int judge = frac & 1;
     // the implied leading 1
     int one = 1 << i;
-    
-    if(exp >= 158){
+
+    if (exp >= 158) {
         return 0x80000000;
     }
     if (exp <= 126) {
@@ -364,8 +364,9 @@ int floatFloat2Int(unsigned uf) {
     }
     // 127 - 157 (actual_exp == 0-30)
     frac = (frac >> 1) | one;
-    if(judge) frac += 1;
-    if(signPos == 0){
+    if (judge)
+        frac += 1;
+    if (signPos == 0) {
         return frac;
     }
     return ~frac + 1;
@@ -375,14 +376,32 @@ int floatFloat2Int(unsigned uf) {
  *   (2.0 raised to the power x) for any 32-bit integer x.
  *
  *   The unsigned value that is returned should have the identical bit
- *   representation as the single-precision floating-point number 2.0^x.
+ *   representation as the single-precision floa3ting-point number 2.0^x.
  *   If the result is too small to be represented as a denorm, return
  *   0. If too large, return +INF.
  *
  *   Legal ops: Any integer/unsigned operations incl. ||, &&. Also if, while
- *   Max ops: 30
+ *   +
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+    unsigned sign = 0x00000000;
+    unsigned frac = 0x00000000;
+    unsigned exp = (x + 127) << 23;
+    if (x <= -150) {
+        return 0;
+    }
+    if (x >= 128) {
+        return 0xFF << 23;
+    }
+    // -126 ~ 127 : normalized float
+    if (x >= -126) {
+        return sign | exp | frac;
+    }
+    // -149~ -127 : denormalized float
+    else {
+        frac = 1 << (23 + x + 126);
+        exp = 0x00000000;
+        return sign | exp | frac;
+    }
 }
