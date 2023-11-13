@@ -1,0 +1,1 @@
+* 答案一 汇编代码内可知内存地址 0x402400存放着答案。 **"Border relations with Canada have never been better."**
